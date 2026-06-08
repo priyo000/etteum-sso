@@ -326,14 +326,18 @@ app.post('/sso', async (req, res) => {
 function signXml(xml, refId) {
   const sig = new SignedXml();
   sig.signatureAlgorithm = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
-  sig.addReference({
-    xpath: `//*[@ID='${refId}']`,
-    transforms: [
+
+  // xml-crypto v3.x uses individual parameters, not an object
+  sig.addReference(
+    `//*[@ID='${refId}']`,  // xpath
+    [
       'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
       'http://www.w3.org/2001/10/xml-exc-c14n#',
-    ],
-    digestAlgorithm: 'http://www.w3.org/2001/04/xmlenc#sha256',
-  });
+    ],  // transforms
+    'http://www.w3.org/2001/04/xmlenc#sha256',  // digestAlgorithm
+    refId  // id
+  );
+
   sig.canonicalizationAlgorithm = 'http://www.w3.org/2001/10/xml-exc-c14n#';
   sig.privateKey = PRIVATE_KEY;
   sig.publicCert = CERT_PEM;
