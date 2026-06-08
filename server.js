@@ -33,8 +33,8 @@ const inflate = promisify(zlib.inflateRaw);
 const CONFIG = {
   ALLOWED_DOMAIN: 'etteum.tech',
   IDP_BASE_URL: process.env.IDP_BASE_URL || 'https://sso.etteum.tech',
-  SP_ENTITY_ID: process.env.SP_ENTITY_ID || '',
-  SP_ACS_URL: process.env.SP_ACS_URL || '',
+  SP_ENTITY_ID: process.env.SP_ENTITY_ID || 'vb8vR1EybcREB1tkJYinejQfu',
+  SP_ACS_URL: process.env.SP_ACS_URL || 'https://external.auth.openai.com/sso/saml/acs/vb8vR1EybcREB1tkJYinejQfu',
   PORT: parseInt(process.env.PORT || '3000'),
 };
 
@@ -354,6 +354,17 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', metadata: '/metadata', sso: '/sso' });
 });
 
+// ─── Keep-alive ping (prevent Render free tier spin down) ───
+const KEEPALIVE_INTERVAL = 14 * 60 * 1000; // 14 minutes (before 15min spin down)
+const PING_URL = process.env.PING_URL || `http://localhost:${CONFIG.PORT}/`;
+
+setInterval(() => {
+  const url = process.env.PING_URL || `https://${CONFIG.IDP_BASE_URL.replace('https://', '')}/`;
+  fetch(url)
+    .then(r => console.log(`💓 Keep-alive ping: ${r.status} at ${new Date().toISOString()}`))
+    .catch(e => console.error(`❌ Keep-alive failed: ${e.message}`));
+}, KEEPALIVE_INTERVAL);
+
 app.listen(CONFIG.PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════╗
@@ -361,6 +372,7 @@ app.listen(CONFIG.PORT, () => {
 ║  Port: ${CONFIG.PORT}                              ║
 ║  Metadata: http://localhost:${CONFIG.PORT}/metadata  ║
 ║  SSO:      http://localhost:${CONFIG.PORT}/sso        ║
+║  Keep-alive: every 14 minutes             ║
 ╚═══════════════════════════════════════════╝
 `);
 });
