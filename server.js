@@ -339,7 +339,8 @@ function signXml(xml, refId) {
   );
 
   sig.canonicalizationAlgorithm = 'http://www.w3.org/2001/10/xml-exc-c14n#';
-  sig.privateKey = PRIVATE_KEY;
+  // xml-crypto v3.x uses signingKey, v6+ uses privateKey
+  sig.signingKey = PRIVATE_KEY;
   sig.publicCert = CERT_PEM;
   sig.keyInfoProvider = {
     getKeyInfo: () => `<X509Data><X509Certificate>${CERT_B64}</X509Certificate></X509Data>`,
